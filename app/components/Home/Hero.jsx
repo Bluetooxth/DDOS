@@ -10,8 +10,8 @@ const Hero = () => {
                     <span className='heading'>From DDoS Attacks</span>
                 </h1>
                 <p className='text-xl lg:text-2xl text-center font-normal flex flex-col'>
-                    <span>Stay online and secure with our advanced DDoS protection service.</span>
-                    <span>Don't let cyber threats disrupt your website.</span>
+                    <span>{`Stay online and secure with our advanced DDoS protection service.`}</span>
+                    <span>{`Don't let cyber threats disrupt your website.`}</span>
                 </p>
                 <button className='px-4 py-2 text-xl font-medium btn'>
                     Get Started Now
