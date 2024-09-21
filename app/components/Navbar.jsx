@@ -16,7 +16,7 @@ const Navbar = () => {
           </Link>
           {/* Menu */}
           <Link href="https://github.com/Bluetooxth/DDOS" className="">
-            <FaGithub className="text-2xl text-slate-200" />
+            <FaGithub className="text-3xl text-slate-200" />
           </Link>
         </div>
       </div>
