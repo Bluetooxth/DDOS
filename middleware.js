@@ -14,6 +14,8 @@ export function middleware(req) {
 
     let requestInfo = requestLog.get(ip) || { count: 0, lastRequest: currentTime, blockedUntil: null };
 
+    console.log(`IP: ${ip}, Count: ${requestInfo.count}, LastRequest: ${requestInfo.lastRequest}, BlockedUntil: ${requestInfo.blockedUntil}`);
+
     if (requestInfo.blockedUntil && currentTime < requestInfo.blockedUntil) {
         return NextResponse.json(
             { message: 'You are temporarily blocked due to excessive requests. Please try again later.' },
