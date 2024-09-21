@@ -12,15 +12,17 @@ export function middleware(req) {
         return NextResponse.next();
     }
 
-    const requestInfo = requestLog.get(ip) || { count: 0, lastRequest: currentTime, blockedUntil: null };
+    let requestInfo = requestLog.get(ip) || { count: 0, lastRequest: currentTime, blockedUntil: null };
 
     if (requestInfo.blockedUntil && currentTime < requestInfo.blockedUntil) {
-        return new NextResponse.json({ message: 'You are temporarily blocked due to excessive requests. Please try again later.' }, { status: 429 });
+        return NextResponse.json(
+            { message: 'You are temporarily blocked due to excessive requests. Please try again later.' },
+            { status: 429 }
+        );
     }
 
     if (currentTime - requestInfo.lastRequest > BLOCK_DURATION) {
-        requestInfo.count = 1;
-        requestInfo.lastRequest = currentTime;
+        requestInfo = { count: 1, lastRequest: currentTime, blockedUntil: null };
     } else {
         requestInfo.count += 1;
     }
@@ -30,7 +32,10 @@ export function middleware(req) {
     if (requestInfo.count > CHALLENGE_LIMIT) {
         requestInfo.blockedUntil = currentTime + BLOCK_DURATION;
         requestLog.set(ip, requestInfo);
-        return new NextResponse.json({ message: 'You have exceeded the maximum number of requests. Please wait before trying again.' }, { status: 429 });
+        return NextResponse.json(
+            { message: 'You have exceeded the maximum number of requests. Please wait before trying again.' },
+            { status: 429 }
+        );
     }
 
     return NextResponse.next();
