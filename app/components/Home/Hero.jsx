@@ -1,4 +1,5 @@
 import React from 'react'
+import { LiaHourglassStartSolid } from "react-icons/lia";
 
 const Hero = () => {
   return (
@@ -13,8 +14,8 @@ const Hero = () => {
                     <span>{`Stay online and secure with our advanced DDoS protection service.`}</span>
                     <span>{`Don't let cyber threats disrupt your website.`}</span>
                 </p>
-                <button className='px-4 py-2 text-xl font-medium btn'>
-                    Get Started Now
+                <button className='px-7 py-3 text-xl font-medium rounded-full flex items-center gap-2 btn'>
+                    Get Started Now <LiaHourglassStartSolid className='text-2xl'/>
                 </button>
             </div>
         </div>

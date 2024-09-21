@@ -5,10 +5,10 @@ const Footer = () => {
     <section className="flex justify-center items-center w-full footer">
       <div className="flex justify-between items-center w-[95vw] lg:container gap-5 py-5">
         <div className="flex flex-col justify-center items-start gap-5">
-          <h2 className="text-3xl font-semibold">Optimux</h2>
+          <h2 className="text-2xl font-semibold text-slate-200">Optimuxx</h2>
         </div>
         <div className="flex flex-col justify-start items-start gap-5">
-          <h3 className="text-lg font-normal">
+          <h3 className="text-lg font-normal text-slate-200">
             All Rights Reserved &copy; 2024
           </h3>
         </div>
