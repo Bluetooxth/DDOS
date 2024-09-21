@@ -7,13 +7,16 @@ const BLOCK_DURATION = 90 * 1000;
 export function middleware(req) {
     const ip = req.headers.get('x-forwarded-for') || req.ip || '127.0.0.1';
     const currentTime = Date.now();
-    
-    const customUrl = req.headers.get('url');
+
     if (ip === '127.0.0.1' || ip === '::1') {
         return NextResponse.next();
     }
-    if (!customUrl) {
-        return new NextResponse.json({ message: 'Access denied. URL must be provided.' }, { status: 403 });
+
+    const challengeAnswer = parseInt(req.headers.get('x-challenge-answer'), 10);
+    const correctAnswer = 8; // Example: 3 + 5
+
+    if (isNaN(challengeAnswer) || challengeAnswer !== correctAnswer) {
+        return new NextResponse.json({ message: 'Access denied. Solve the challenge correctly.' }, { status: 403 });
     }
 
     const requestInfo = requestLog.get(ip) || { count: 0, lastRequest: currentTime, blockedUntil: null };
