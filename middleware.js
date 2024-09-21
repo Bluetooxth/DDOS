@@ -12,13 +12,6 @@ export function middleware(req) {
         return NextResponse.next();
     }
 
-    const challengeAnswer = parseInt(req.headers.get('x-challenge-answer'), 10);
-    const correctAnswer = 8; // Example: 3 + 5
-
-    if (isNaN(challengeAnswer) || challengeAnswer !== correctAnswer) {
-        return new NextResponse.json({ message: 'Access denied. Solve the challenge correctly.' }, { status: 403 });
-    }
-
     const requestInfo = requestLog.get(ip) || { count: 0, lastRequest: currentTime, blockedUntil: null };
 
     if (requestInfo.blockedUntil && currentTime < requestInfo.blockedUntil) {
