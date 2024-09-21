@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from '../utils/rateLimiter';
-import { rateLimitConfig } from '../config/securityRules';
+
+const MAX_REQUESTS = 50; // Set your max requests here
+const WINDOW_MS = 90000; // Set your window time in milliseconds (90 seconds)
 
 export function middleware(req) {
     const ip = req.headers.get('x-forwarded-for') || req.ip || '127.0.0.1';
-    const { maxRequests, windowMs } = rateLimitConfig;
 
     // Check if the IP is rate-limited
-    const { allowed, remainingTime } = checkRateLimit(ip, maxRequests, windowMs);
+    const { allowed, remainingTime } = checkRateLimit(ip, MAX_REQUESTS, WINDOW_MS);
 
     if (!allowed) {
         return new NextResponse.json({

@@ -6,7 +6,7 @@ export function middleware(req) {
 
     if (isIpBlocked(ip)) {
         return new NextResponse.json({
-            message: 'Your IP is blocked due to suspicious activity. Please complete the CAPTCHA to proceed.',
+            message: 'Your IP is blocked due to suspicious activity.',
         }, { status: 403 });
     }
 
