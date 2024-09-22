@@ -1,9 +1,8 @@
 export function generateCaptcha() {
-    const num1 = Math.floor(Math.random() * 10);
-    const num2 = Math.floor(Math.random() * 10);
-    return { challenge: `${num1} + ${num2}`, answer: num1 + num2 };
+    // Example: generate a simple numeric CAPTCHA
+    const captcha = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+    // Store the captcha for verification if needed (e.g., in memory or a cache)
+    return captcha.toString();
 }
 
-export function validateCaptcha(userInput, correctAnswer) {
-    return parseInt(userInput) === correctAnswer;
-}
+// Add more utility functions for CAPTCHA validation as needed
