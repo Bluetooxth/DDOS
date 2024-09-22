@@ -1,54 +1,38 @@
 import { NextResponse } from 'next/server';
-import rateLimit from 'express-rate-limit';
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: "Too many requests from this IP, please try again later.",
-});
-
-const isIPBlocked = (ip) => {
-    if (typeof window !== 'undefined') {
-        const blockedIPs = JSON.parse(localStorage.getItem('blockedIPs')) || [];
-        return blockedIPs.includes(ip);
-    }
-    return false;
-};
-
-const blockIP = (ip) => {
-    if (typeof window !== 'undefined') {
-        const blockedIPs = JSON.parse(localStorage.getItem('blockedIPs')) || [];
-        if (!blockedIPs.includes(ip)) {
-            blockedIPs.push(ip);
-            localStorage.setItem('blockedIPs', JSON.stringify(blockedIPs));
-            console.log(`Blocked IP: ${ip}`);
-        }
-    }
-};
+const rateLimit = {};
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const MAX_REQUESTS = 10;
 
 export function middleware(req) {
     const clientIP = req.headers.get('x-forwarded-for') || req.ip;
 
-    if (isIPBlocked(clientIP)) {
-        console.log(`Access denied for blocked IP: ${clientIP}`);
-        return NextResponse.json({ message: "Access denied." }, { status: 403 });
+    if (!rateLimit[clientIP]) {
+        rateLimit[clientIP] = { count: 0, lastRequestTime: Date.now() };
+        console.log(`New entry for IP: ${clientIP}`);
     }
 
-    const rateLimitResponse = limiter(req, {}, () => {});
-    
-    if (rateLimitResponse && rateLimitResponse.headers) {
-        console.log(`Rate limit exceeded for IP: ${clientIP}. Requests: ${rateLimit.max}`);
-        return rateLimitResponse;
+    const currentTime = Date.now();
+    const timeSinceLastRequest = currentTime - rateLimit[clientIP].lastRequestTime;
+
+    if (timeSinceLastRequest > RATE_LIMIT_WINDOW_MS) {
+        console.log(`Resetting request count for IP: ${clientIP}`);
+        rateLimit[clientIP].count = 0;
+        rateLimit[clientIP].lastRequestTime = currentTime;
     }
 
-    console.log(`Request allowed for IP: ${clientIP}`);
+    rateLimit[clientIP].count++;
+    console.log(`Request count for IP ${clientIP}: ${rateLimit[clientIP].count}`);
+
+    if (rateLimit[clientIP].count > MAX_REQUESTS) {
+        console.log(`Rate limit exceeded for IP: ${clientIP}. Count: ${rateLimit[clientIP].count}`);
+        return NextResponse.json({ message: "Too many requests, please try again later." }, { status: 429 });
+    }
+
+    console.log(`Request allowed for IP: ${clientIP}. Count: ${rateLimit[clientIP].count}`);
     return NextResponse.next();
 }
 
-export const blockIPAddress = (ip) => {
-    blockIP(ip);
-};
-
 export const config = {
     matcher: ['/api/:path*', '/:path*'],
-}
+};
