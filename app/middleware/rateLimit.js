@@ -29,7 +29,7 @@ export function rateLimitMiddleware(req) {
     return null; // Not exceeded
 }
 
-// Function to get the number of requests made by an IP
+// Export the function to get the request count
 export function getRequestsCount(ip) {
     return rateLimitMap.has(ip) ? rateLimitMap.get(ip).count : 0;
 }

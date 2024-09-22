@@ -1,4 +1,4 @@
-import { rateLimitMiddleware } from './app/middleware/rateLimit';
+import { rateLimitMiddleware, getRequestsCount } from './app/middleware/rateLimit';
 import { securityMiddleware } from './app/middleware/securityMiddleware';
 import { captchaChallengeMiddleware } from './app/middleware/captchaChallenge';
 import { NextResponse } from 'next/server';
@@ -24,7 +24,7 @@ export async function middleware(req) {
     }
 
     // Check if CAPTCHA is required
-    const requestsCount = rateLimitMiddleware.getRequestsCount(ip);
+    const requestsCount = getRequestsCount(ip);
     const captchaRequired = requestsCount > CAPTCHA_THRESHOLD;
 
     if (captchaRequired) {
