@@ -3,6 +3,7 @@ import './globals.css';
 import './styles.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import MouseMovementTracker from './components/MouseMove';
 
 const font = localFont({
   src: './fonts/InstrumentSans.ttf',
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
   return (
       <html lang="en">
         <body className={font.className}>
+          <MouseMovementTracker />
           <Navbar />
           {children}
           <Footer />

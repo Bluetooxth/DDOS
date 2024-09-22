@@ -1,35 +1,54 @@
 import { NextResponse } from 'next/server';
+import { sha256 } from 'js-sha256';
 
-const rateLimit = {};
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const MAX_REQUESTS = 10;
+const RATE_LIMIT = 100;
+const TIME_FRAME = 90 * 1000;
+const requestCounts = {};
 
-export function middleware(req) {
-    const clientIP = req.headers.get('x-forwarded-for') || req.ip;
+function getBrowserCharacteristics(req) {
+    const headers = req.headers;
+    return {
+        userAgent: headers.get('user-agent') || '',
+        acceptLanguage: headers.get('accept-language') || '',
+    };
+}
 
-    if (!rateLimit[clientIP]) {
-        rateLimit[clientIP] = { count: 0, lastRequestTime: Date.now() };
-        console.log(`New entry for IP: ${clientIP}`);
+function generateMouseMovementFingerprint(movements) {
+    return sha256(JSON.stringify(movements));
+}
+
+export async function middleware(req) {
+    console.log('--- Middleware Execution Started ---');
+
+    const storedFingerprint = req.cookies.get('mouseMovementFingerprint');
+    console.log('Stored Fingerprint:', storedFingerprint ? storedFingerprint.value : 'None');
+
+    if (!storedFingerprint) {
+        console.log('No mouse movement fingerprint found.');
+        return NextResponse.next();
     }
 
+    const clientIP = req.ip || req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for') || 'unknown';
     const currentTime = Date.now();
-    const timeSinceLastRequest = currentTime - rateLimit[clientIP].lastRequestTime;
 
-    if (timeSinceLastRequest > RATE_LIMIT_WINDOW_MS) {
-        console.log(`Resetting request count for IP: ${clientIP}`);
-        rateLimit[clientIP].count = 0;
-        rateLimit[clientIP].lastRequestTime = currentTime;
+    if (!requestCounts[clientIP]) {
+        requestCounts[clientIP] = { count: 1, firstRequestTime: currentTime };
+    } else {
+        if (currentTime - requestCounts[clientIP].firstRequestTime < TIME_FRAME) {
+            requestCounts[clientIP].count += 1;
+        } else {
+            requestCounts[clientIP] = { count: 1, firstRequestTime: currentTime };
+        }
     }
 
-    rateLimit[clientIP].count++;
-    console.log(`Request count for IP ${clientIP}: ${rateLimit[clientIP].count}`);
+    console.log('Current Request Count for IP:', clientIP, requestCounts[clientIP].count);
 
-    if (rateLimit[clientIP].count > MAX_REQUESTS) {
-        console.log(`Rate limit exceeded for IP: ${clientIP}. Count: ${rateLimit[clientIP].count}`);
-        return NextResponse.json({ message: "Too many requests, please try again later." }, { status: 429 });
+    if (requestCounts[clientIP].count > RATE_LIMIT) {
+        console.log('Rate limit exceeded, access denied.');
+        return NextResponse.json({ message: 'Rate limit exceeded. Access denied.' }, { status: 429 });
     }
 
-    console.log(`Request allowed for IP: ${clientIP}. Count: ${rateLimit[clientIP].count}`);
+    console.log('Mouse movement fingerprint found, proceeding with request.');
     return NextResponse.next();
 }
 
