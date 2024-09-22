@@ -1,39 +1,35 @@
 const rateLimitMap = new Map();
+const MAX_REQUESTS = 50; // Max requests allowed
+const WINDOW_MS = 90000; // 90 seconds window
 
-export function checkRateLimit(ip, maxRequests, windowMs) {
-    const currentTime = Date.now();
-    const requestData = rateLimitMap.get(ip) || { count: 0, firstRequestTime: currentTime };
+export function rateLimitMiddleware(req) {
+    const ip = req.headers.get('x-forwarded-for') || req.ip || '127.0.0.1';
+    const now = Date.now();
 
-    // Reset count if the window has passed
-    if (currentTime - requestData.firstRequestTime > windowMs) {
-        requestData.count = 1; // Reset count
-        requestData.firstRequestTime = currentTime;
+    if (!rateLimitMap.has(ip)) {
+        rateLimitMap.set(ip, { count: 1, firstRequestTime: now });
+        return null; // Not exceeded
+    }
+
+    const data = rateLimitMap.get(ip);
+    
+    // Reset count if the time window has passed
+    if (now - data.firstRequestTime > WINDOW_MS) {
+        data.count = 1;
+        data.firstRequestTime = now;
     } else {
-        requestData.count += 1;
+        data.count += 1;
     }
 
-    rateLimitMap.set(ip, requestData);
-
-    if (requestData.count > maxRequests) {
-        const remainingTime = windowMs - (currentTime - requestData.firstRequestTime);
-        return { allowed: false, remainingTime };
+    // Check if the limit is exceeded
+    if (data.count > MAX_REQUESTS) {
+        return true; // Rate limit exceeded
     }
 
-    return { allowed: true, remainingTime: 0 };
+    return null; // Not exceeded
 }
 
-export function middleware(req) {
-    const ip = req.headers.get('x-forwarded-for') || req.ip || '127.0.0.1';
-    const maxRequests = 50; // Set your max requests here
-    const windowMs = 90000; // Set your window time in milliseconds (90 seconds)
-
-    const { allowed, remainingTime } = checkRateLimit(ip, maxRequests, windowMs);
-
-    if (!allowed) {
-        return new NextResponse.json({
-            message: `Rate limit exceeded. Try again in ${Math.round(remainingTime / 1000)} seconds.`
-        }, { status: 429 });
-    }
-
-    return null; // Allow request to proceed
+// Function to get the number of requests made by an IP
+export function getRequestsCount(ip) {
+    return rateLimitMap.has(ip) ? rateLimitMap.get(ip).count : 0;
 }
